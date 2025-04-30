@@ -1,14 +1,12 @@
 object paquete {
   var estaPago = true
   var peso=100 
-  //var mensajero= roberto
-  method puedeSerEntregado(unMensajero,unDestino) = self.estaPago() and  unDestino.puedeLlegar(unMensajero)
+  var destino= puenteBrooklyn
+ 
+  method puedeSerEntregado(unMensajero) = self.estaPago() and  destino.puedeLlegar(unMensajero)
 
   method precio() = 50
- // method mensajero(nuevo){
-  //  mensajero = nuevo
- // }
- // method mensajero()= mensajero
+
   method estaPago()= estaPago
 
   method cambiarPago(unPago) {
@@ -21,20 +19,24 @@ object paquete {
   method cambiarPeso(unPeso){
     peso= unPeso
   }
+
+  method cambiarDestino(nuevo){
+    destino = nuevo
+  }
+
+  method destino() = destino 
 }
 
 object paquetito{
-  method puedeSerEntregado(unMensajero,unDestino) = self.estaPago() and  unDestino.puedeLlegar(unMensajero)
+  method puedeSerEntregado(unMensajero) = true
   method estaPago() = true
-  method precio() = 0
-  
- 
+  method precio()= 0
+
 }
 
 object paquetonViajero{
   const destino = []
   var estaPago = true
-
   method estaPago(nuevo){
     estaPago= nuevo
   }
@@ -43,16 +45,18 @@ object paquetonViajero{
 
   method agregar(unDestino){
     destino.add(unDestino)
-  }
+  } 
 
   method quitar(unDestino){
     destino.remove(unDestino)
   }
   method precio() = 100 * destino.size()
 
-  method puedeSerEntregado(mensajero,unDestino) {
-    return  self.estaPago() and self.mensajeroPuedePasar(mensajero)
+  method puedeSerEntregado(mensajero) {
+    return  self.estaPago() and self.mensajeroPuedePasar(mensajero) 
   }
+
+
 
   method mensajeroPuedePasar(mensajero) = destino.all({m => m.puedeLlegar(mensajero)})
 
@@ -134,25 +138,49 @@ object empresa{
 
   method empresaGrande() = mensajeros.size() > 2 
 
-  method elPaquetePuedeSerEntregado(unPaquete,unDestino){
-    return mensajeros.any({m=>unPaquete.puedeSerEntregado(m , unDestino)})
+  method entregaRapida() = paquete.puedeSerEntregado(mensajeros.head()) 
+
+  method pesoFinal() = mensajeros.last().peso()
+
+  method elPaquetePuedeSerEntregado(unPaquete){
+    return mensajeros.any({m=>unPaquete.puedeSerEntregado(m)})
   }
 
-  method obtenerTodosLosMensajeros(unPaquete,unDestino){
-    return mensajeros.filter({m=>unPaquete.puedeSerEntregado(m , unDestino)})
+  method obtenerTodosLosMensajeros(unPaquete){
+    return mensajeros.filter({m=>unPaquete.puedeSerEntregado(m)})
   }
 
   method sobrecarga(){
     return mensajeros.sum({m=>m.peso()}) / mensajeros.size()  > 500 
   }
 
+  method enviar(unPaquete){
+    if(self.elPaquetePuedeSerEntregado(unPaquete))
+       paquetesEnviados.add(unPaquete)
+    else 
+      paquetesPendientes.add(unPaquete)
+  }
+
+  method facturacioTotal()= paquetesEnviados.sum{p=>p.precio()}
+
+  method enviarTodos(paquetesAEnviar){
+    paquetesAEnviar.forEach{p=>self.enviar(p)}
+  }
+
+  method pendienteMasCaro(){
+    return paquetesPendientes.max{p=>p.precio()}
+  }
+
+  method reenviarPendiente() {
+    self.enviar(self.pendienteMasCaro())
+    paquetesPendientes.remove{self.pendienteMasCaro()}
+    
+  }
 
 
-  
 
 
-  
-   
+
 }
 
 
